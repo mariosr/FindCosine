@@ -1,6 +1,25 @@
 package FindCosine.FindCosine;
 
+import java.util.List;
+
 public class Main {
+	
+	public static void printMatrix(int[][] matrix){
+		for (int i = 0; i < 4; i++) {
+			for (int j = 0; j < 3174; j++) {
+				if(matrix[i][j] > 0) System.out.println("matrix["+i+"]["+j+"] = " +matrix[i][j] +"\n");
+			}
+		}
+	}
+	
+	public static void printEntitiesContent(List<EntityContent> list){
+		for (EntityContent e : list) {
+			System.out.println("\n author: " +e.getAuthor() +"\n local: " +e.getLocal()
+					+"\n tags size: " +e.getTags().size()
+					+"\n paragraphsWords size: " +e.getParagraphs().size());
+		}
+
+	}
 	
     public static void main( String[] args ){
  
@@ -12,12 +31,11 @@ public class Main {
     	//esse metodo ler todos os json das noticias e armazena em o objetos locais
     	p.readJson();
  
-    	for (EntityContent e : p.getEntitiesContent()) {
-			System.out.println("\n author: " +e.getAuthor() +"\n local: " +e.getLocal()
-					+"\n tags size: " +e.getTags().size()
-					+"\n paragraphsWords size: " +e.getParagraphs().size());
-		}
+    	printEntitiesContent(p.getEntitiesContent());
+    	
+    	printMatrix(p.getOcurrences());
     	
     	
     }
+    
 }

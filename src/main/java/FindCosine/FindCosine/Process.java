@@ -7,6 +7,8 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
@@ -17,6 +19,21 @@ public class Process {
 	private List<String> stopWords = new ArrayList<String>();
 	private List<String> filesName = new ArrayList<String>();
 	private List<EntityContent> entitiesContent = new ArrayList<EntityContent>();
+	private int[][] ocurrences = new int[5][3174];
+	
+	public Process(){
+		initializeMatrix();
+	}
+	
+	public void initializeMatrix(){
+		
+		for (int i = 0; i < 4; i++) {
+			for (int j = 0; j < 3174; j++) {
+				ocurrences[i][j] = 0;
+			}
+		}
+		
+	}
 	
 	public List<String> getStopWords() {
 		return stopWords;
@@ -28,6 +45,14 @@ public class Process {
 
 	public List<String> getFilesName() {
 		return filesName;
+	}
+
+	public int[][] getOcurrences() {
+		return ocurrences;
+	}
+
+	public void setOcurrences(int[][] ocurrences) {
+		this.ocurrences = ocurrences;
 	}
 
 	public void setFilesName(List<String> filesName) {
@@ -81,6 +106,40 @@ public class Process {
 		return result;
 	}
 	
+	public void countOcurrenceWord(String word, int numDoc){
+		
+		// 0 dilma
+		// 1 rio
+		// 2 olimpiadas
+		// 3 brasilia
+		
+		if(word != null){
+	    	Pattern re = Pattern.compile(
+							"\\brio\\b|\\bdilma\\b|\\bolimpiada\\b|\\bbrasilia\\b",
+							Pattern.CASE_INSENSITIVE);
+
+			Matcher m = re.matcher(word);
+
+			String stringFound = "";
+			
+			while (m.find()) {
+				stringFound = m.group();
+			}
+			
+			if(stringFound.equalsIgnoreCase("dilma")){
+				ocurrences[0][numDoc] += 1;	
+			}else if(stringFound.equalsIgnoreCase("rio")){
+				ocurrences[1][numDoc] += 1;
+			}else if(stringFound.equalsIgnoreCase("olimpiadas")){
+				ocurrences[2][numDoc] += 1;
+			}else if(stringFound.equalsIgnoreCase("brasilia")){
+				ocurrences[3][numDoc] += 1;
+			}
+	
+		}
+				
+	}
+	
 	public void readTxt(){
 
 		BufferedReader br = null;
@@ -117,6 +176,7 @@ public class Process {
 	public void readJson(){
 	
 	   JSONParser parser = new JSONParser();
+	   int numDoc = 0;
    	   	for (String fileName : filesName) {
 
    	   	   List<String> paragraphsAux = new ArrayList<String>();
@@ -129,6 +189,9 @@ public class Process {
                 String author = preProcessingWordWhiteSpace((String) jsonObject.get("author"));
                 String local = preProcessingWordWhiteSpace((String) jsonObject.get("local"));
                 
+                countOcurrenceWord(local, numDoc);
+                countOcurrenceWord(author, numDoc);
+                
                 JSONArray tags = (JSONArray) jsonObject.get("tags");
      
                 @SuppressWarnings("unchecked")
@@ -137,7 +200,11 @@ public class Process {
                 	 String phrase = iteratorTags.next();
                  	  String[] parts = phrase.split(" ");
                  	  	for (int i = 0; i < parts.length; i++) {
-                 	  		if (preProcessingWord(parts[i]) != null) tagsAux.add(preProcessingWord(parts[i]));
+                 	  		String word = preProcessingWord(parts[i]);
+                 	  		if (word != null) {
+                 	  			countOcurrenceWord(word, numDoc);
+                 	  			tagsAux.add(word);
+                 	  		}
                  	  	}	
                 }
                 
@@ -148,7 +215,11 @@ public class Process {
               	  String phrase = iteratorParagraphs.next();
               	  String[] parts = phrase.split(" ");
               	  	for (int i = 0; i < parts.length; i++) {
-              	  		if (preProcessingWord(parts[i]) != null) paragraphsAux.add(preProcessingWord(parts[i]));
+              	  		String word = preProcessingWord(parts[i]);
+              	  		if (word != null){
+              	  			countOcurrenceWord(word, numDoc);
+              	  			paragraphsAux.add(word);
+              	  		} 
               	  	}	
                 }
                 
@@ -163,6 +234,7 @@ public class Process {
             } catch (Exception e) {
                 e.printStackTrace();
             }
+   	   	numDoc++;
    	   	}
           	
 	}
@@ -179,8 +251,18 @@ public class Process {
 		}
 	}
 	
-	public void findCosine(String firstWord, String secondWord){
-	
+	public double findCosine(int[] vectorA, int[] vectorB){
+	 
+		double result = 0.0;
+		double x = 0.0;
+		double y = 0.0;
+		    for (int i = 0; i < vectorA.length; i++) {
+		    	result += vectorA[i] * vectorB[i];
+		        x += Math.pow(vectorA[i], 2);
+		        y += Math.pow(vectorB[i], 2);
+		    }   
+		    
+		return result / (Math.sqrt(x) * Math.sqrt(y));
 	}
 	
 }
