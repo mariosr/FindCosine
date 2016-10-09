@@ -31,10 +31,12 @@ public class Main {
     	//esse metodo ler todos os json das noticias e armazena em o objetos locais
     	p.readJson();
  
-    	printEntitiesContent(p.getEntitiesContent());
+    	//printEntitiesContent(p.getEntitiesContent());	
+    	//printMatrix(p.getOcurrences());
     	
-    	printMatrix(p.getOcurrences());
+    	double cosine = p.findCosine(p.getVectorWord(3), p.getVectorWord(1));
     	
+    	System.out.println("cosine value " +cosine);
     	
     }
     

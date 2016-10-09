@@ -19,7 +19,8 @@ public class Process {
 	private List<String> stopWords = new ArrayList<String>();
 	private List<String> filesName = new ArrayList<String>();
 	private List<EntityContent> entitiesContent = new ArrayList<EntityContent>();
-	private int[][] ocurrences = new int[5][3174];
+	private int numDocs = 3174;
+	private int[][] ocurrences = new int[4][numDocs];
 	
 	public Process(){
 		initializeMatrix();
@@ -28,7 +29,7 @@ public class Process {
 	public void initializeMatrix(){
 		
 		for (int i = 0; i < 4; i++) {
-			for (int j = 0; j < 3174; j++) {
+			for (int j = 0; j < numDocs; j++) {
 				ocurrences[i][j] = 0;
 			}
 		}
@@ -249,6 +250,17 @@ public class Process {
 		    	filesName.add(listOfFiles[i].getName());
 		     } 
 		}
+	}
+	
+	public int[] getVectorWord(int word){
+		
+		int[] vet = new int[numDocs];
+		
+		for (int i = 0; i < numDocs ; i++) {
+			vet[i] = ocurrences[word][i];
+		}
+		
+		return vet;
 	}
 	
 	public double findCosine(int[] vectorA, int[] vectorB){
