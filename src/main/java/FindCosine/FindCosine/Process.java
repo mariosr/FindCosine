@@ -7,35 +7,48 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 
 public class Process {
-	
+
 	private List<String> stopWords = new ArrayList<String>();
 	private List<String> filesName = new ArrayList<String>();
 	private List<EntityContent> entitiesContent = new ArrayList<EntityContent>();
 	private int numDocs = 3174;
-	private int[][] ocurrences = new int[4][numDocs];
-	
-	public Process(){
+	private int numWords = 65000;
+	private int qtdWords = 0;
+	private int[][] ocurrences = new int[numWords][numDocs];
+	private List<String> wordsCode = new ArrayList<String>();
+
+	public Process() {
 		initializeMatrix();
 	}
 	
-	public void initializeMatrix(){
-		
-		for (int i = 0; i < 4; i++) {
+	public void initializeMatrix() {
+
+		for (int i = 0; i < numWords; i++) {
 			for (int j = 0; j < numDocs; j++) {
 				ocurrences[i][j] = 0;
 			}
 		}
-		
+
 	}
-	
+
+	public int[] getVectorWord(int word) {
+
+		int[] vet = new int[numDocs];
+
+		for (int i = 0; i < numDocs; i++) {
+			vet[i] = ocurrences[word][i];
+			System.out.println(vet[i]);
+		}
+
+		return vet;
+	}
+
 	public List<String> getStopWords() {
 		return stopWords;
 	}
@@ -68,92 +81,75 @@ public class Process {
 		this.entitiesContent = entitiesContent;
 	}
 
-	public String preProcessingWord(String text){
-		
+	public String preProcessingWord(String text) {
+
 		String result = text.toLowerCase();
-		
-		result = result.replace( " " , ""); 
-		result = result.replace( "." , ""); 
-		result = result.replace( "/" , ""); 
-		result = result.replace( "-" , ""); 
-		result = result.replace( "|" , "");
-		result = result.replace( "," , "");
-		result = result.replace( ")" , "");
-		result = result.replace( "(" , "");
-		result = result.replace( ":" , "");
-		result = result.replace( "*" , "");
-		
-		if(stopWords.contains(result) == true) result = null;
-		
+
+		result = result.replace(" ", "");
+		result = result.replace(".", "");
+		result = result.replace("/", "");
+		result = result.replace("-", "");
+		result = result.replace("|", "");
+		result = result.replace(",", "");
+		result = result.replace(")", "");
+		result = result.replace("(", "");
+		result = result.replace(":", "");
+		result = result.replace("*", "");
+		result = result.replace("'", "");
+
+		if (stopWords.contains(result) == true)
+			result = null;
+
 		return result;
 	}
-	
-	public String preProcessingWordWhiteSpace(String text){
-		
+
+	public String preProcessingWordWhiteSpace(String text) {
+
 		String result = text.toLowerCase();
-		
-		result = result.replace( "." , ""); 
-		result = result.replace( "*" , "");
-		result = result.replace( "/" , ""); 
-		result = result.replace( "-" , ""); 
-		result = result.replace( "|" , "");
-		result = result.replace( "," , "");
-		result = result.replace( ")" , "");
-		result = result.replace( "(" , "");
-		result = result.replace( ":" , "");
-		
-		if(stopWords.contains(result) == true) result = null;
-		
+
+		result = result.replace(".", "");
+		result = result.replace("*", "");
+		result = result.replace("/", "");
+		result = result.replace("-", "");
+		result = result.replace("|", "");
+		result = result.replace(",", "");
+		result = result.replace(")", "");
+		result = result.replace("(", "");
+		result = result.replace(":", "");
+		result = result.replace("'", "");
+
+		if (stopWords.contains(result) == true)
+			result = null;
+
 		return result;
 	}
-	
-	public void countOcurrenceWord(String word, int numDoc){
-		
-		// 0 dilma
-		// 1 rio
-		// 2 olimpiadas
-		// 3 brasilia
-		
-		if(word != null){
-	    	Pattern re = Pattern.compile(
-							"\\brio\\b|\\bdilma\\b|\\bolimpiada\\b|\\bbrasilia\\b",
-							Pattern.CASE_INSENSITIVE);
 
-			Matcher m = re.matcher(word);
+	public void countOcurrenceWord(String word, int numDoc) {
 
-			String stringFound = "";
-			
-			while (m.find()) {
-				stringFound = m.group();
-			}
-			
-			if(stringFound.equalsIgnoreCase("dilma")){
-				ocurrences[0][numDoc] += 1;	
-			}else if(stringFound.equalsIgnoreCase("rio")){
-				ocurrences[1][numDoc] += 1;
-			}else if(stringFound.equalsIgnoreCase("olimpiadas")){
-				ocurrences[2][numDoc] += 1;
-			}else if(stringFound.equalsIgnoreCase("brasilia")){
-				ocurrences[3][numDoc] += 1;
-			}
-	
+		if (word != null) {
+			int qtd = saveWordInDictionary(word);
+			System.out.println("word "+word +" codeWord "+qtd +" numDoc " +numDoc);
+			ocurrences[qtd][numDoc] += 1;
 		}
-				
+
 	}
-	
-	public void readTxt(){
+
+	public void readTxt() {
 
 		BufferedReader br = null;
 
 		try {
 			String sCurrentLine;
-			br = new BufferedReader(new FileReader(getProjectPath() +"/src/main/resources/stop.txt"));
-			
+			br = new BufferedReader(new FileReader(getProjectPath()
+					+ "/src/main/resources/stop.txt"));
+
 			while ((sCurrentLine = br.readLine()) != null) {
 				String[] s = sCurrentLine.split(" ");
 				for (int i = 0; i < s.length; i++) {
-					if(s[i] != " " && s[i] != "+" && s[i] != " " && s[i] != "| " && s[i].trim().length() > 1 )
-						if(preProcessingWord(s[i]) != null) stopWords.add(preProcessingWord(s[i]));
+					if (s[i] != " " && s[i] != "+" && s[i] != " "
+							&& s[i] != "| " && s[i].trim().length() > 1)
+						if (preProcessingWord(s[i]) != null)
+							stopWords.add(preProcessingWord(s[i]));
 				}
 			}
 
@@ -161,120 +157,132 @@ public class Process {
 			e.printStackTrace();
 		} finally {
 			try {
-				if (br != null)br.close();
+				if (br != null)
+					br.close();
 			} catch (IOException ex) {
 				ex.printStackTrace();
 			}
 		}
 	}
-	
-	public String getProjectPath(){
-		File currDir = new File("");
-	    String path = currDir.getAbsolutePath();
-	    return path;
-	}
-	
-	public void readJson(){
-	
-	   JSONParser parser = new JSONParser();
-	   int numDoc = 0;
-   	   	for (String fileName : filesName) {
 
-   	   	   List<String> paragraphsAux = new ArrayList<String>();
-   	   	   List<String> tagsAux = new ArrayList<String>();
-   	   	   
-   	   		try {
-   	   			Object obj = parser.parse(new FileReader(getProjectPath()+"/src/main/resources/news/"+fileName));
-   	   			JSONObject jsonObject = (JSONObject) obj;
-     
-                String author = preProcessingWordWhiteSpace((String) jsonObject.get("author"));
-                String local = preProcessingWordWhiteSpace((String) jsonObject.get("local"));
-                
-                countOcurrenceWord(local, numDoc);
-                countOcurrenceWord(author, numDoc);
-                
-                JSONArray tags = (JSONArray) jsonObject.get("tags");
-     
-                @SuppressWarnings("unchecked")
-				Iterator<String> iteratorTags = tags.iterator();
-                while (iteratorTags.hasNext()) {
-                	 String phrase = iteratorTags.next();
-                 	  String[] parts = phrase.split(" ");
-                 	  	for (int i = 0; i < parts.length; i++) {
-                 	  		String word = preProcessingWord(parts[i]);
-                 	  		if (word != null) {
-                 	  			countOcurrenceWord(word, numDoc);
-                 	  			tagsAux.add(word);
-                 	  		}
-                 	  	}	
-                }
-                
-                JSONArray paragraphs = (JSONArray) jsonObject.get("paragraphs");
-                @SuppressWarnings("unchecked")
-                Iterator<String> iteratorParagraphs = paragraphs.iterator();
-                while (iteratorParagraphs.hasNext()) {
-              	  String phrase = iteratorParagraphs.next();
-              	  String[] parts = phrase.split(" ");
-              	  	for (int i = 0; i < parts.length; i++) {
-              	  		String word = preProcessingWord(parts[i]);
-              	  		if (word != null){
-              	  			countOcurrenceWord(word, numDoc);
-              	  			paragraphsAux.add(word);
-              	  		} 
-              	  	}	
-                }
-                
-                EntityContent entity = new EntityContent();
-                entity.setAuthor(author);
-                entity.setLocal(local);
-                entity.setTags(tagsAux);
-                entity.setParagraphs(paragraphsAux);
-                
-                entitiesContent.add(entity);
-                
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-   	   	numDoc++;
-   	   	}
-          	
-	}
-	
-	public void readAllFiles(){
-		
-		File folder = new File(getProjectPath() +"/src/main/resources/news/");
+	public void readAllFiles() {
+
+		File folder = new File(getProjectPath() + "/src/main/resources/news/");
 		File[] listOfFiles = folder.listFiles();
 
-		 for (int i = 0; i < listOfFiles.length; i++) {
-			 if (listOfFiles[i].isFile()) {
-		    	filesName.add(listOfFiles[i].getName());
-		     } 
+		for (int i = 0; i < listOfFiles.length; i++) {
+			if (listOfFiles[i].isFile()) {
+				filesName.add(listOfFiles[i].getName());
+			}
 		}
 	}
-	
-	public int[] getVectorWord(int word){
-		
-		int[] vet = new int[numDocs];
-		
-		for (int i = 0; i < numDocs ; i++) {
-			vet[i] = ocurrences[word][i];
+
+	public String getProjectPath() {
+		File currDir = new File("");
+		String path = currDir.getAbsolutePath();
+		return path;
+	}
+
+	public int saveWordInDictionary(String word) {
+
+		int exist = 0;
+
+		for (String text : wordsCode) {
+			if (text.equalsIgnoreCase(word) == true){
+				exist++;
+				break;
+			}
+		}
+
+		if (exist == 0) {
+			wordsCode.add(word);
+			qtdWords++;
 		}
 		
-		return vet;
+		return qtdWords;
 	}
-	
-	public double findCosine(int[] vectorA, int[] vectorB){
-	 
+
+	public void readJson() {
+
+		JSONParser parser = new JSONParser();
+		int numDoc = 0;
+		for (String fileName : filesName) {
+
+			List<String> paragraphsAux = new ArrayList<String>();
+			List<String> tagsAux = new ArrayList<String>();
+
+			try {
+				Object obj = parser.parse(new FileReader(getProjectPath()
+						+ "/src/main/resources/news/" + fileName));
+				JSONObject jsonObject = (JSONObject) obj;
+
+				String author = preProcessingWordWhiteSpace((String) jsonObject
+						.get("author"));
+				String local = preProcessingWordWhiteSpace((String) jsonObject
+						.get("local"));
+
+				//countOcurrenceWord(local, numDoc);
+				//countOcurrenceWord(author, numDoc);
+
+				JSONArray tags = (JSONArray) jsonObject.get("tags");
+
+				@SuppressWarnings("unchecked")
+				Iterator<String> iteratorTags = tags.iterator();
+				while (iteratorTags.hasNext()) {
+					String phrase = iteratorTags.next();
+					String[] parts = phrase.split(" ");
+					for (int i = 0; i < parts.length; i++) {
+						String word = preProcessingWord(parts[i]);
+						if (word != null) {
+							//countOcurrenceWord(word, numDoc);
+							tagsAux.add(word);
+						}
+					}
+				}
+
+				JSONArray paragraphs = (JSONArray) jsonObject.get("paragraphs");
+				@SuppressWarnings("unchecked")
+				Iterator<String> iteratorParagraphs = paragraphs.iterator();
+				while (iteratorParagraphs.hasNext()) {
+					String phrase = iteratorParagraphs.next();
+					String[] parts = phrase.split(" ");
+					for (int i = 0; i < parts.length; i++) {
+						String word = preProcessingWord(parts[i]);
+						if (word != null) {
+							countOcurrenceWord(word, numDoc);
+							paragraphsAux.add(word);
+						}
+					}
+				}
+
+				EntityContent entity = new EntityContent();
+				entity.setAuthor(author);
+				entity.setLocal(local);
+				entity.setTags(tagsAux);
+				entity.setParagraphs(paragraphsAux);
+
+				entitiesContent.add(entity);
+
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+			numDoc++;
+		}
+
+	}
+
+	public double findCosine(int[] vectorA, int[] vectorB) {
+
 		double result = 0.0;
 		double x = 0.0;
 		double y = 0.0;
-		    for (int i = 0; i < vectorA.length; i++) {
-		    	result += vectorA[i] * vectorB[i];
-		        x += Math.pow(vectorA[i], 2);
-		        y += Math.pow(vectorB[i], 2);
-		    }   
-		    
+		for (int i = 0; i < vectorA.length; i++) {
+			result += vectorA[i] * vectorB[i];
+			x += Math.pow(vectorA[i], 2);
+			y += Math.pow(vectorB[i], 2);
+		}
+
 		return result / (Math.sqrt(x) * Math.sqrt(y));
 	}
-	
+
 }

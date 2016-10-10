@@ -34,9 +34,13 @@ public class Main {
     	//printEntitiesContent(p.getEntitiesContent());	
     	//printMatrix(p.getOcurrences());
     	
-    	double cosine = p.findCosine(p.getVectorWord(3), p.getVectorWord(1));
+    	double cosine = p.findCosine(p.getVectorWord(300), p.getVectorWord(221));
     	
     	System.out.println("cosine value " +cosine);
+    	
+    	
+    	
+    	
     	
     }
     
